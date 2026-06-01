@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Master Admin - {{ site_name }}</title>
+    <style>
+        body { background: #06010f; color: #fff; font-family: 'JetBrains Mono', monospace; padding: 20px; max-width: 900px; margin: auto; }
+        .card { background: #0a0a0a; padding: 25px; border: 1px solid #333; border-radius: 10px; margin-bottom: 25px; box-shadow: 0 0 15px #000; }
+        .config-card { border-color: {{ theme_color }}; box-shadow: 0 0 20px {{ theme_color }}44; }
+        h3 { color: {{ theme_color }}; margin-top: 0; font-size: 16px; letter-spacing: 1px; }
+        label { font-size: 11px; color: #888; display: block; margin-bottom: 5px; }
+        input, select { width: 95%; padding: 12px; background: #111; border: 1px solid #333; color: #fff; border-radius: 6px; margin-bottom: 20px; outline:none; }
+        input:focus { border-color: {{ theme_color }}; }
+        button { background: transparent; border: 2px solid {{ theme_color }}; color: {{ theme_color }}; padding: 12px 20px; font-weight: bold; cursor: pointer; border-radius: 6px; width: 100%; letter-spacing: 1px; transition: 0.3s; }
+        button:hover { background: {{ theme_color }}; color: #000; }
+    </style>
+</head>
+<body>
+    <h2 style="text-align: center; color: #ef4444; letter-spacing: 2px;">⚠️ MASTER CONTROL PANEL</h2>
+
+    <div class="card config-card">
+        <h3>⚙️ DYNAMIC SYSTEM CONFIGURATION</h3>
+        
+        <label>WEBSITE BRAND NAME</label>
+        <input type="text" id="siteNameInput" value="{{ data.settings.site_name }}">
+
+        <label>GLOBAL FREE USER PASSWORD</label>
+        <input type="text" id="freePasswordInput" value="{{ data.settings.free_user_password }}" style="color: {{ theme_color }}; font-weight: bold;">
+
+        <label>SYSTEM THEME COLOR (Hex Code)</label>
+        <input type="text" id="themeInput" value="{{ data.settings.theme_color }}">
+
+        <button onclick="saveAdminSettings()">UPDATE SYSTEM DATA</button>
+    </div>
+
+    <script>
+    async function saveAdminSettings() {
+        const name = document.getElementById('siteNameInput').value;
+        const pass = document.getElementById('freePasswordInput').value;
+        const color = document.getElementById('themeInput').value;
+        
+        const res = await fetch('/admin/settings/save', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ site_name: name, free_user_password: pass, theme_color: color })
+        });
+        const data = await res.json();
+        if(data.success) { alert('System Updated Successfully!'); location.href = '/dashboard'; }
+    }
+    </script>
+</body>
+</html>

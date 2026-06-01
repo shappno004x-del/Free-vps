@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ site_name }} - Authentication</title>
+    <style>
+        body { background: #06010f; color: #fff; font-family: 'JetBrains Mono', monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-box { background: #0a0a0a; padding: 40px; border: 1px solid {{ theme_color }}; border-radius: 12px; width: 320px; box-shadow: 0 0 20px {{ theme_color }}44; text-align: center; }
+        h2 { color: {{ theme_color }}; margin-bottom: 25px; font-size: 18px; letter-spacing: 2px; }
+        input { width: 90%; padding: 12px; margin: 10px 0; background: #111; border: 1px solid #333; color: #fff; font-family: inherit; border-radius: 6px; outline: none; }
+        input:focus { border-color: {{ theme_color }}; }
+        button { width: 100%; padding: 12px; background: transparent; border: 2px solid {{ theme_color }}; color: {{ theme_color }}; font-weight: bold; cursor: pointer; border-radius: 6px; margin-top: 15px; letter-spacing: 1px; transition: 0.3s; }
+        button:hover { background: {{ theme_color }}; color: #000; box-shadow: 0 0 15px {{ theme_color }}; }
+        .error { color: #ef4444; font-size: 13px; margin-bottom: 10px; }
+        .admin-link { display: block; margin-top: 20px; color: #666; font-size: 11px; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h2>💀 {{ site_name }}</h2>
+        {% if error %}<p class="error">{{ error }}</p>{% endif %}
+        <form method="POST">
+            <input type="text" name="username" placeholder="Enter Username" required>
+            <input type="password" name="password" placeholder="Global Free Password" required>
+            <button type="submit">>_ AUTHENTICATE</button>
+        </form>
+        <a href="/admin/login" class="admin-link">⚙️ ADMIN ACCESS</a>
+    </div>
+</body>
+</html>

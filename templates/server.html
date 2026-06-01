@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage - {{ server_name }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { background: #080808; color: #fff; font-family: 'JetBrains Mono', monospace; margin: 0; padding: 0; }
+        .header { background: #111; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; }
+        .title-box { display: flex; flex-direction: column; }
+        .project-name { font-size: 18px; font-weight: bold; color: #fff; display: flex; align-items: center; gap: 8px; }
+        .project-id { font-size: 11px; color: #666; margin-top: 4px; }
+        .close-btn { color: #888; text-decoration: none; font-size: 20px; font-weight: bold; }
+        
+        .tabs { display: flex; background: #111; border-bottom: 1px solid #333; overflow-x: auto; }
+        .tab { padding: 15px 20px; font-size: 12px; font-weight: bold; color: #888; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; border-bottom: 3px solid transparent; }
+        .tab.active { color: #fff; border-bottom: 3px solid {{ theme_color }}; }
+        
+        .tab-content { display: none; padding: 20px; }
+        .tab-content.active { display: block; }
+        
+        /* Buttons */
+        .btn-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        .btn { flex: 1; padding: 12px; font-weight: bold; cursor: pointer; border-radius: 6px; font-family: inherit; font-size: 13px; text-align: center; border: none; }
+        .btn-start { background: {{ theme_color }}; color: #000; }
+        .btn-stop { background: #ef4444; color: #fff; }
+        .btn-restart { background: #fbbf24; color: #000; }
+        
+        /* Console */
+        pre { background: #000; padding: 15px; border: 1px solid #222; border-radius: 8px; height: 350px; overflow-y: auto; color: #00ff41; font-size: 12px; line-height: 1.5; margin: 0; }
+        
+        /* Inputs & Lists */
+        label { font-size: 11px; color: #888; display: block; margin-bottom: 6px; text-transform: uppercase; }
+        input, select { width: 100%; padding: 12px; background: #000; border: 1px solid #222; color: #fff; font-family: inherit; border-radius: 8px; margin-bottom: 20px; box-sizing: border-box; outline: none; }
+        input:focus { border-color: {{ theme_color }}; }
+        
+        .file-list { background: #111; border-radius: 8px; border: 1px solid #222; overflow: hidden; margin-top: 15px; }
+        .file-item { padding: 15px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #ccc; }
+        .file-item:last-child { border-bottom: none; }
+        .badge-main { font-size: 10px; border: 1px solid {{ theme_color }}; color: {{ theme_color }}; padding: 2px 6px; border-radius: 4px; margin-left: 8px; }
+        
+        .proxy-link { display: block; text-align: center; padding: 12px; margin-top: 20px; border: 1px dashed {{ theme_color }}; color: {{ theme_color }}; text-decoration: none; border-radius: 8px; font-size: 12px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title-box">
+            <div class="project-name">{{ server_name }} 💯💪</div>
+            <div class="project-id">ID: {{ server_name }}_{{ config.port }}</div>
+        </div>
+        <a href="/dashboard" class="close-btn">×</a>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(event, 'console')">CONSOLE</div>
+        <div class="tab" onclick="switchTab(event, 'files')">FILES</div>
+        <div class="tab" onclick="switchTab(event, 'packages')">PACKAGES</div>
+        <div class="tab" onclick="switchTab(event, 'config')">CONFIG</div>
+    </div>
+
+    <div id="console" class="tab-content active">
+        <div class="btn-group">
+            <button class="btn btn-start" onclick="control('start')">▶ START</button>
+            <button class="btn btn-stop" onclick="control('stop')">■ STOP</button>
+            <button class="btn btn-restart" onclick="control('start')">↺ RESTART</button>
+        </div>
+        <pre id="log-box">Fetching live stream...</pre>
+        <a href="/proxy/{{ server_name }}/" target="_blank" class="proxy-link">🔗 OPEN API PROXY TUNNEL</a>
+    </div>
+
+    <div id="files" class="tab-content">
+        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <input type="file" id="file-input" style="margin: 0; padding: 10px;">
+            <button class="btn btn-start" style="width: auto; padding: 10px 20px;" onclick="upload()">⬆ Upload File/Zip</button>
+        </div>
+        
+        <div class="file-list">
+            {% for f in files %}
+            <div class="file-item">
+                <div>
+                    📄 {{ f.name }}
+                    {% if f.path == config.main_file %}<span class="badge-main">MAIN</span>{% endif %}
+                </div>
+                <div style="color: #666; font-size:11px;">{{ '%.1f'|format(f.size/1024) }} KB</div>
+            </div>
+            {% else %}
+            <div class="file-item" style="justify-content: center; color: #666;">No files uploaded yet.</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div id="packages" class="tab-content">
+        <label>PACKAGE NAME (PIP)</label>
+        <input type="text" id="pkg-name" placeholder="e.g. requests, telethon">
+        
+        <div class="btn-group">
+            <button class="btn btn-start" onclick="installPkg()">📥 INSTALL</button>
+        </div>
+        <p style="font-size: 11px; color: #666; background: #111; padding: 10px; border-radius: 6px; border: 1px solid #222;">
+            ℹ️ Auto-Installer is active. The system automatically reads your files and installs missing packages on START. You only need this for manual installation.
+        </p>
+    </div>
+
+    <div id="config" class="tab-content">
+        <label>MAIN FILE TO RUN</label>
+        <input type="text" id="main-file-input" value="{{ config.main_file }}" placeholder="e.g. bot.py or main.js">
+        
+        <label>AUTO RESTART TIMER (IN SECONDS)</label>
+        <input type="number" id="reset-sec" value="{{ config.auto_reset.seconds }}" placeholder="e.g. 3600 for 1 Hour">
+        
+        <button class="btn btn-start" style="width: 100%;" onclick="saveConfig()">SAVE CHANGES</button>
+    </div>
+
+    <script>
+        // Tab Switcher
+        function switchTab(evt, tabName) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            evt.currentTarget.classList.add('active');
+        }
+
+        // Engine Control
+        async function control(action) {
+            await fetch(`/server/{{ server_name }}/${action}`, {method: 'POST'});
+            alert('Command sent!');
+        }
+
+        // Upload
+        async function upload() {
+            const file = document.getElementById('file-input').files[0];
+            if(!file) return alert('Please select a file!');
+            const fd = new FormData(); fd.append('file', file);
+            const res = await fetch('/server/{{ server_name }}/upload', {method: 'POST', body: fd});
+            const data = await res.json();
+            if(data.success) { alert('Upload Successful!'); location.reload(); }
+        }
+
+        // Save Config
+        async function saveConfig() {
+            const mainFile = document.getElementById('main-file-input').value;
+            const sec = document.getElementById('reset-sec').value;
+            
+            await fetch('/server/{{ server_name }}/settings', {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({main_file: mainFile})
+            });
+            
+            await fetch('/server/{{ server_name }}/auto-reset/settings', {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({enabled: sec > 0, seconds: sec})
+            });
+            alert('Configuration Saved!');
+        }
+
+        // Install Package
+        async function installPkg() {
+            const pkg = document.getElementById('pkg-name').value;
+            if(!pkg) return alert('Enter a package name');
+            alert('Installation started! Check console logs.');
+            await fetch('/server/{{ server_name }}/packages/install', {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({name: pkg})
+            });
+        }
+
+        // Fetch Logs
+        async function fetchLogs() {
+            try {
+                const res = await fetch('/server/{{ server_name }}/logs');
+                const data = await res.json();
+                const box = document.getElementById('log-box');
+                box.innerText = data.logs;
+                box.scrollTop = box.scrollHeight;
+            } catch {}
+        }
+        setInterval(fetchLogs, 2000); fetchLogs();
+    </script>
+</body>
+</html>

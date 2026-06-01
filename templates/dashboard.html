@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ site_name }} - Dashboard</title>
+    <style>
+        body { background: #06010f; color: #fff; font-family: 'JetBrains Mono', monospace; padding: 20px; max-width: 1200px; margin: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 25px; }
+        h1 { color: {{ theme_color }}; margin: 0; font-size: 22px; text-shadow: 0 0 10px {{ theme_color }}66; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: #0a0a0a; padding: 20px; border: 1px solid #222; border-radius: 10px; text-align: center; box-shadow: 0 0 15px #000; }
+        .stat-card h3 { margin: 0; font-size: 13px; color: #888; }
+        .stat-card p { margin: 10px 0 0 0; font-size: 24px; color: {{ theme_color }}; font-weight: bold; text-shadow: 0 0 8px {{ theme_color }}88; }
+        .create-box { background: #0a0a0a; padding: 20px; border: 1px dashed {{ theme_color }}; border-radius: 10px; margin-bottom: 30px; text-align: center; }
+        input, select { padding: 12px; background: #111; border: 1px solid #333; color: #fff; font-family: inherit; border-radius: 6px; margin-right: 10px; outline:none; }
+        button { padding: 12px 25px; background: {{ theme_color }}; border: none; color: #000; font-weight: bold; cursor: pointer; border-radius: 6px; }
+        .server-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .server-card { background: #0a0a0a; padding: 20px; border: 1px solid #222; border-radius: 10px; border-left: 4px solid {{ theme_color }}; display: flex; justify-content: space-between; align-items: center; }
+        .btn-manage { background: transparent; border: 1px solid {{ theme_color }}; color: {{ theme_color }}; padding: 8px 15px; text-decoration: none; border-radius: 4px; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ site_name }}</h1>
+        <div>User: <b style="color:{{ theme_color }}">{{ username }}</b> | <a href="/logout" style="color:#ef4444; text-decoration:none;">LOGOUT</a></div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card"><h3>[ CPU USAGE ]</h3><p id="cpu-stat">--%</p></div>
+        <div class="stat-card"><h3>[ RAM USAGE ]</h3><p id="ram-stat">--%</p></div>
+        <div class="stat-card"><h3>[ RUNNING ]</h3><p>{{ running }} / {{ total }}</p></div>
+    </div>
+
+    <div class="create-box">
+        <h3 style="margin-top:0; color: {{ theme_color }};">+ DEPLOY NEW TERMINAL</h3>
+        <form action="/server/create" method="POST">
+            <input type="text" name="name" placeholder="Project Name (e.g. TG-Bot)" required>
+            <select name="runtime">
+                <option value="python">Python 3.x</option>
+                <option value="node">Node.js</option>
+            </select>
+            <button type="submit">CREATE</button>
+        </form>
+    </div>
+
+    <div class="server-grid">
+        {% for sname, scfg in servers.items() %}
+        <div class="server-card">
+            <div>
+                <div style="font-weight: bold; font-size: 16px;">{{ sname }}</div>
+                <div style="font-size: 11px; color: #666; margin-top:5px;">Port: {{ scfg.port }} | Status: 
+                    <span style="color: {% if scfg.status == 'running' %}{{ theme_color }}{% else %}#ef4444{% endif %}">{{ scfg.status|upper }}</span>
+                </div>
+            </div>
+            <a href="/server/{{ sname }}" class="btn-manage">MANAGE</a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        async function updateStats() {
+            try {
+                const res = await fetch('/api/stats');
+                const data = await res.json();
+                document.getElementById('cpu-stat').innerText = data.cpu + '%';
+                document.getElementById('ram-stat').innerText = data.ram + '%';
+            } catch{}
+        }
+        setInterval(updateStats, 3000); updateStats();
+    </script>
+</body>
+</html>
